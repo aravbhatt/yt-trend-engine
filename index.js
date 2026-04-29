@@ -195,10 +195,10 @@ app.get('/ideas', async (req, res) => {
         baseIdea: base,
 
         titles: [
-          \`The Truth About This: \${base}\`,
-          \`This Is Getting Out of Control\`,
-          \`Why Fans Are Losing It Over This\`,
-          \`Nobody Is Talking About This Enough\`
+          `The Truth About This: ${base}`,
+          `This Is Getting Out of Control`,
+          `Why Fans Are Losing It Over This`,
+          `Nobody Is Talking About This Enough`
         ],
 
         thumbnails: [
@@ -224,5 +224,5 @@ app.get('/ideas', async (req, res) => {
 
 // ---------- START SERVER ----------
 app.listen(PORT, () => {
-  console.log(\`Server running on port \${PORT}\`);
+  console.log(`Server running on port ${PORT}`);
 });
