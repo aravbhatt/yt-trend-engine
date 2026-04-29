@@ -93,24 +93,20 @@ app.get('/', (req, res) => {
               const div = document.createElement('div');
               div.className = 'card';
 
-              div.innerHTML = \`
-                <div class="title">\${item.baseIdea}</div>
+              div.innerHTML =
+                '<div class="title">' + item.baseIdea + '</div>' +
 
-                <div class="section">
-                  <strong>Titles:</strong><br>
-                  \${item.titles.join('<br>')}
-                </div>
+                '<div class="section"><strong>Titles:</strong><br>' +
+                item.titles.join('<br>') +
+                '</div>' +
 
-                <div class="section">
-                  <strong>Thumbnails:</strong><br>
-                  \${item.thumbnails.join(', ')}
-                </div>
+                '<div class="section"><strong>Thumbnails:</strong><br>' +
+                item.thumbnails.join(', ') +
+                '</div>' +
 
-                <div class="section">
-                  <strong>Hook:</strong><br>
-                  \${item.hook}
-                </div>
-              \`;
+                '<div class="section"><strong>Hook:</strong><br>' +
+                item.hook +
+                '</div>';
 
               container.appendChild(div);
             });
@@ -195,10 +191,10 @@ app.get('/ideas', async (req, res) => {
         baseIdea: base,
 
         titles: [
-          `The Truth About This: ${base}`,
-          `This Is Getting Out of Control`,
-          `Why Fans Are Losing It Over This`,
-          `Nobody Is Talking About This Enough`
+          "The Truth About This: " + base,
+          "This Is Getting Out of Control",
+          "Why Fans Are Losing It Over This",
+          "Nobody Is Talking About This Enough"
         ],
 
         thumbnails: [
@@ -224,5 +220,5 @@ app.get('/ideas', async (req, res) => {
 
 // ---------- START SERVER ----------
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log("Server running on port " + PORT);
 });
