@@ -6,110 +6,32 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 
-// ---------- UI ----------
+// UI
 app.get('/', (req, res) => {
   res.send(`
     <html>
-      <head>
-        <title>YT Trend Engine</title>
-        <style>
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #0f0f0f;
-            color: #e5e5e5;
-            padding: 40px;
-            max-width: 800px;
-            margin: auto;
-          }
-
-          h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
-          }
-
-          input {
-            padding: 10px;
-            width: 300px;
-            font-size: 14px;
-            border-radius: 6px;
-            border: none;
-            outline: none;
-          }
-
-          button {
-            padding: 10px 16px;
-            font-size: 14px;
-            margin-left: 10px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            background: #2a2a2a;
-            color: white;
-          }
-
-          button:hover {
-            background: #3a3a3a;
-          }
-
-          .card {
-            background: #1a1a1a;
-            padding: 16px;
-            border-radius: 8px;
-            margin-top: 20px;
-          }
-
-          .title {
-            font-weight: bold;
-            margin-bottom: 10px;
-          }
-
-          .section {
-            margin-top: 10px;
-            font-size: 14px;
-            line-height: 1.5;
-          }
-        </style>
-      </head>
-
-      <body>
-        <h1>YT Trend Engine</h1>
-
-        <input id="topic" placeholder="e.g. most hated teams" />
-        <button onclick="generate()">Generate</button>
-
-        <div id="results"></div>
+      <body style="background:#111;color:white;font-family:sans-serif;padding:40px;">
+        <h2>YT Trend Engine</h2>
+        <input id="topic" placeholder="topic" />
+        <button onclick="go()">Generate</button>
+        <div id="out"></div>
 
         <script>
-          async function generate() {
+          async function go() {
             const topic = document.getElementById('topic').value;
-
             const res = await fetch('/ideas?topic=' + encodeURIComponent(topic));
             const data = await res.json();
 
-            const container = document.getElementById('results');
-            container.innerHTML = '';
-
-            data.forEach(item => {
-              const div = document.createElement('div');
-              div.className = 'card';
-
-              div.innerHTML =
-                '<div class="title">' + item.baseIdea + '</div>' +
-
-                '<div class="section"><strong>Titles:</strong><br>' +
-                item.titles.join('<br>') +
-                '</div>' +
-
-                '<div class="section"><strong>Thumbnails:</strong><br>' +
-                item.thumbnails.join(', ') +
-                '</div>' +
-
-                '<div class="section"><strong>Hook:</strong><br>' +
-                item.hook +
-                '</div>';
-
-              container.appendChild(div);
+            let html = '';
+            data.forEach(d => {
+              html += '<div style="margin-top:20px;padding:10px;background:#222">';
+              html += '<b>' + d.baseIdea + '</b><br><br>';
+              html += d.titles.join('<br>') + '<br><br>';
+              html += d.hook;
+              html += '</div>';
             });
+
+            document.getElementById('out').innerHTML = html;
           }
         </script>
       </body>
@@ -118,107 +40,45 @@ app.get('/', (req, res) => {
 });
 
 
-// ---------- YT TRENDS ----------
-app.get('/yt-trends', async (req, res) => {
-  try {
-    const topic = req.query.topic || 'sports controversy OR worst teams OR rankings';
-
-    const searchRes = await axios.get(
-      'https://www.googleapis.com/youtube/v3/search',
-      {
-        params: {
-          part: 'snippet',
-          q: topic,
-          maxResults: 10,
-          type: 'video',
-          key: process.env.YOUTUBE_API_KEY
-        }
-      }
-    );
-
-    const videoIds = searchRes.data.items.map(v => v.id.videoId).join(',');
-
-    const statsRes = await axios.get(
-      'https://www.googleapis.com/youtube/v3/videos',
-      {
-        params: {
-          part: 'snippet,statistics',
-          id: videoIds,
-          key: process.env.YOUTUBE_API_KEY
-        }
-      }
-    );
-
-    const videos = statsRes.data.items
-      .map(v => ({
-        title: v.snippet.title,
-        channel: v.snippet.channelTitle,
-        views: parseInt(v.statistics.viewCount)
-      }))
-      .sort((a, b) => b.views - a.views);
-
-    res.json(videos);
-
-  } catch (err) {
-    console.error(err.response?.data || err.message);
-    res.send("Error fetching YouTube data");
-  }
-});
-
-
-// ---------- IDEA GENERATOR ----------
+// IDEAS
 app.get('/ideas', async (req, res) => {
   try {
-    const topic = req.query.topic || 'sports controversy OR worst teams OR rankings';
+    const topic = req.query.topic || 'sports';
 
-    const searchRes = await axios.get(
-      'https://www.googleapis.com/youtube/v3/search',
-      {
-        params: {
-          part: 'snippet',
-          q: topic,
-          maxResults: 5,
-          type: 'video',
-          key: process.env.YOUTUBE_API_KEY
-        }
+    const r = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+      params: {
+        part: 'snippet',
+        q: topic,
+        maxResults: 5,
+        type: 'video',
+        key: process.env.YOUTUBE_API_KEY
       }
-    );
+    });
 
-    const ideas = searchRes.data.items.map(v => {
+    const ideas = r.data.items.map(v => {
       const base = v.snippet.title;
 
       return {
         baseIdea: base,
-
         titles: [
           "The Truth About This: " + base,
           "This Is Getting Out of Control",
           "Why Fans Are Losing It Over This",
           "Nobody Is Talking About This Enough"
         ],
-
-        thumbnails: [
-          "THIS IS BAD",
-          "WHAT IS THIS",
-          "SERIOUS PROBLEM",
-          "FANS ARE MAD"
-        ],
-
-        hook:
-          "Everyone is talking about this right now, and it may be worse than it looks."
+        hook: "This topic is getting attention right now."
       };
     });
 
     res.json(ideas);
 
-  } catch (err) {
-    console.error(err.response?.data || err.message);
-    res.send("Error generating ideas");
+  } catch (e) {
+    res.send("error");
   }
 });
 
 
-// ---------- START SERVER ----------
+// START
 app.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
+  console.log("running on " + PORT);
 });
