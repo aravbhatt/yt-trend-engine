@@ -8,12 +8,31 @@ const PORT = process.env.PORT || 3000;
 
 /* ------------------ HELPERS ------------------ */
 
+// Clean YouTube titles
 function cleanTitle(title) {
   return title
     .replace(/#\w+/g, '')
     .replace(/[^\w\s!?']/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+// Filter out garbage videos
+function isGoodVideo(title) {
+  const badWords = [
+    'highlights',
+    'full game',
+    'recap',
+    'live',
+    'stream',
+    'shorts',
+    'vs',
+    'game'
+  ];
+
+  return !badWords.some(word =>
+    title.toLowerCase().includes(word)
+  );
 }
 
 
@@ -102,7 +121,7 @@ app.get('/', (req, res) => {
           }
 
           .copy {
-            margin-top: 10px;
+            margin-top: 6px;
             font-size: 12px;
             cursor: pointer;
             color: #60a5fa;
@@ -115,7 +134,7 @@ app.get('/', (req, res) => {
           <h1>YT Trend Engine</h1>
 
           <div class="search">
-            <input id="topic" placeholder="Search ideas (reds offense, bengals, cavs playoffs)" />
+            <input id="topic" placeholder="reds offense, bengals, cavs playoffs" />
             <button onclick="generate()">Generate</button>
           </div>
 
@@ -151,7 +170,7 @@ app.get('/', (req, res) => {
 
                 '<div class="section"><strong>Titles:</strong><br>' +
                 item.titles.map(t =>
-                  t + ' <div class="copy" onclick="copyText(\\'' + t + '\\')">copy</div>'
+                  t + '<div class="copy" onclick="copyText(\\'' + t + '\\')">copy</div>'
                 ).join('<br>') +
                 '</div>' +
 
@@ -172,7 +191,6 @@ app.get('/', (req, res) => {
             navigator.clipboard.writeText(text);
           }
 
-          // Auto load (your niche)
           window.onload = () => generate('cincinnati sports analysis');
         </script>
       </body>
@@ -190,29 +208,45 @@ app.get('/ideas', async (req, res) => {
     const r = await axios.get('https://www.googleapis.com/youtube/v3/search', {
       params: {
         part: 'snippet',
-        q: topic + " sports OR nfl OR mlb OR nba OR college football analysis OR breakdown OR why OR problem OR highlights",
-        maxResults: 8,
+        q: topic + " sports OR nfl OR mlb OR nba OR college football analysis OR breakdown OR why OR problem",
+        maxResults: 10,
         type: 'video',
         videoDuration: 'medium',
         key: process.env.YOUTUBE_API_KEY
       }
     });
 
-    const ideas = r.data.items.map(v => {
-      const base = cleanTitle(v.snippet.title);
+    const ideas = r.data.items
+      .filter(v => isGoodVideo(v.snippet.title))
+      .map(v => {
+        const raw = cleanTitle(v.snippet.title);
 
-      return {
-        baseIdea: base,
-        titles: [
-          base,
-          base + " (And It's Worse Than You Think)",
-          "Why " + base + " Is a Huge Problem",
-          "Everyone Is Wrong About " + base,
-          "The Truth About " + base
-        ],
-        hook: "Fans are already arguing about this, but most people don’t actually understand what’s really going on."
-      };
-    });
+        let base = raw;
+
+        // Rewrite into usable ideas
+        if (/reds/i.test(raw)) {
+          base = "The Cincinnati Reds Have a Serious Problem";
+        } else if (/bengals/i.test(raw)) {
+          base = "The Bengals Might Be in Trouble";
+        } else if (/cavaliers|cavs/i.test(raw)) {
+          base = "Are the Cavs Actually Contenders?";
+        } else if (/ohio state|buckeyes/i.test(raw)) {
+          base = "Ohio State Has Questions Heading Into This Season";
+        }
+
+        return {
+          baseIdea: base,
+          titles: [
+            base,
+            base + " (And It's Getting Worse)",
+            "This Is Why This Team Is Struggling",
+            "What Nobody Is Saying About This Team",
+            "The Real Problem No One Wants to Admit"
+          ],
+          hook:
+            "If you've been watching this team, you can already tell something isn't right… and it's starting to become a real issue."
+        };
+      });
 
     res.json(ideas);
 
