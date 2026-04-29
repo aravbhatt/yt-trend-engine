@@ -8,11 +8,10 @@ const PORT = process.env.PORT || 3000;
 
 /* ------------------ HELPERS ------------------ */
 
-// Clean YouTube titles
 function cleanTitle(title) {
   return title
-    .replace(/#\w+/g, '')           // remove hashtags
-    .replace(/[^\w\s!?']/g, '')     // remove weird symbols
+    .replace(/#\w+/g, '')
+    .replace(/[^\w\s!?']/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -116,15 +115,18 @@ app.get('/', (req, res) => {
           <h1>YT Trend Engine</h1>
 
           <div class="search">
-            <input id="topic" placeholder="Search ideas (e.g. reds offense, cavs playoffs)" />
+            <input id="topic" placeholder="Search ideas (reds offense, bengals, cavs playoffs)" />
             <button onclick="generate()">Generate</button>
           </div>
 
           <div class="quick">
-            <button onclick="quick('sports controversy')">Controversy</button>
-            <button onclick="quick('most hated teams')">Hated Teams</button>
-            <button onclick="quick('nfl rankings')">NFL</button>
-            <button onclick="quick('nba playoffs')">NBA</button>
+            <button onclick="quick('cincinnati bengals analysis OR bengals news OR nfl breakdown')">Bengals</button>
+            <button onclick="quick('cleveland cavaliers analysis OR cavs playoffs OR nba breakdown')">Cavs</button>
+            <button onclick="quick('cincinnati reds offense OR reds lineup OR mlb analysis')">Reds</button>
+            <button onclick="quick('ohio state football analysis OR buckeyes news OR college football breakdown')">Buckeyes</button>
+            <button onclick="quick('nfl analysis OR nfl rankings OR nfl takes')">NFL</button>
+            <button onclick="quick('mlb analysis OR baseball rankings OR mlb news')">MLB</button>
+            <button onclick="quick('nba analysis OR nba takes OR nba rankings')">NBA</button>
           </div>
 
           <div id="results"></div>
@@ -148,7 +150,7 @@ app.get('/', (req, res) => {
                 '<div class="title">' + item.baseIdea + '</div>' +
 
                 '<div class="section"><strong>Titles:</strong><br>' +
-                item.titles.map(t => 
+                item.titles.map(t =>
                   t + ' <div class="copy" onclick="copyText(\\'' + t + '\\')">copy</div>'
                 ).join('<br>') +
                 '</div>' +
@@ -170,8 +172,8 @@ app.get('/', (req, res) => {
             navigator.clipboard.writeText(text);
           }
 
-          // Auto load
-          window.onload = () => generate('sports controversy');
+          // Auto load (your niche)
+          window.onload = () => generate('cincinnati sports analysis');
         </script>
       </body>
     </html>
@@ -183,12 +185,12 @@ app.get('/', (req, res) => {
 
 app.get('/ideas', async (req, res) => {
   try {
-    const topic = req.query.topic || 'sports controversy';
+    const topic = req.query.topic || 'sports';
 
     const r = await axios.get('https://www.googleapis.com/youtube/v3/search', {
       params: {
         part: 'snippet',
-        q: topic + " sports analysis OR rankings OR controversy OR highlights",
+        q: topic + " sports OR nfl OR mlb OR nba OR college football analysis OR breakdown OR why OR problem OR highlights",
         maxResults: 8,
         type: 'video',
         videoDuration: 'medium',
